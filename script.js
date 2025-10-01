@@ -13,12 +13,23 @@ async function loadModel() {
 }
 
 // Capture image from video
+//async function captureImage() {
+  //  const video = document.getElementById("video");
+    //const canvas = document.createElement("canvas");
+    //canvas.width = video.videoWidth;
+    //canvas.height = video.videoHeight;
+    //canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    //return canvas;
+//}
+
 async function captureImage() {
-    const video = document.getElementById("video");
+    const img = new Image();
+    img.src = "dataset/406/1.jpg";  // pick one of your test images
+    await new Promise(resolve => { img.onload = resolve; });
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext("2d").drawImage(img, 0, 0);
     return canvas;
 }
 
@@ -93,3 +104,4 @@ async function init() {
 
 // Start the app
 init();
+
