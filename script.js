@@ -45,19 +45,29 @@ function findClosest(embedding) {
 
 // Load JSON embeddings
 async function loadDataset() {
-    const response = await fetch("poster_embeddings.json");
-    const data = await response.json();
-    datasetEmbeddings = data;
-    console.log("Dataset embeddings loaded");
+    try {
+        const response = await fetch("poster_embeddings.json");
+        if (!response.ok) throw new Error("Could not load JSON");
+        const data = await response.json();
+        datasetEmbeddings = data;
+        console.log("Dataset embeddings loaded");
+    } catch (err) {
+        console.error("Error loading dataset embeddings:", err);
+        alert("Failed to load poster embeddings. Make sure poster_embeddings.json is accessible.");
+    }
 }
 
 // Scan poster
 async function scanPoster() {
-    const img = await captureImage();
-    const embedding = await getEmbedding(tf.browser.fromPixels(img));
-    const posterNumber = findClosest(embedding);
-    document.getElementById("result").innerText = 
-        `Poster Number: ${posterNumber}\nBox: ${posterMapping[posterNumber]}`;
+    try {
+        const img = await captureImage();
+        const embedding = await getEmbedding(tf.browser.fromPixels(img));
+        const posterNumber = findClosest(embedding);
+        document.getElementById("result").innerText = 
+            `Poster Number: ${posterNumber}\nBox: ${posterMapping[posterNumber]}`;
+    } catch (err) {
+        console.error("Error scanning poster:", err);
+    }
 }
 
 // Initialize app
@@ -66,11 +76,20 @@ async function init() {
     await loadDataset();
 
     const video = document.getElementById("video");
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-        video.srcObject = stream;
-    });
+    
+    // Use rear camera on iPhone/iPad
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => {
+            video.srcObject = stream;
+            video.play();
+        })
+        .catch(err => {
+            alert("Camera access denied or not supported: " + err);
+            console.error(err);
+        });
 
     document.getElementById("scanBtn").addEventListener("click", scanPoster);
 }
 
+// Start the app
 init();
