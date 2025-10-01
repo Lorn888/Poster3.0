@@ -6,6 +6,9 @@ const posterMapping = {
     "460": "Box 3"
 };
 
+// Set the distance threshold for matching
+const MATCH_THRESHOLD = 1.0; // adjust between 0.8–1.2 if needed
+
 // Logging function
 function log(message) {
     console.log(message);
@@ -13,7 +16,7 @@ function log(message) {
     logDiv.innerText += message + "\n";
 }
 
-// Load MobileNet
+// Load MobileNet model
 async function loadModel() {
     log("Loading MobileNet model...");
     model = await mobilenet.load();
@@ -61,7 +64,7 @@ async function getEmbedding(canvas) {
     return embedding;
 }
 
-// Find closest poster
+// Find closest poster with threshold
 function findClosest(embedding) {
     log("Finding closest poster...");
     let minDist = Infinity;
@@ -69,12 +72,19 @@ function findClosest(embedding) {
 
     for (const item of datasetEmbeddings) {
         const dist = tf.norm(tf.sub(embedding, tf.tensor(item.embedding))).dataSync()[0];
+        log(`Comparing to poster ${item.poster}, distance = ${dist}`);
         if (dist < minDist) {
             minDist = dist;
             bestPoster = item.poster;
         }
     }
-    log("Closest poster found: " + bestPoster);
+
+    if (minDist > MATCH_THRESHOLD) {
+        log(`No match: minimum distance ${minDist} above threshold ${MATCH_THRESHOLD}`);
+        return null;
+    }
+
+    log(`Closest poster found: ${bestPoster} (distance ${minDist})`);
     return bestPoster;
 }
 
