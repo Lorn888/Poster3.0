@@ -12,34 +12,29 @@ async function loadModel() {
     console.log("Model loaded");
 }
 
-// Capture image from video
-//async function captureImage() {
-  //  const video = document.getElementById("video");
-    //const canvas = document.createElement("canvas");
-    //canvas.width = video.videoWidth;
-    //canvas.height = video.videoHeight;
-    //canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
-    //return canvas;
-//}
-
+// Capture video frame safely
 async function captureImage() {
-    const img = new Image();
-    img.src = "dataset/406/1.jpg";  // pick one of your test images
-    await new Promise(resolve => { img.onload = resolve; });
+    const video = document.getElementById("video");
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+        alert("Video not ready yet. Please wait a moment.");
+        return null;
+    }
     const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
-    canvas.getContext("2d").drawImage(img, 0, 0);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     return canvas;
 }
 
-// Compute embedding of an image
-async function getEmbedding(img) {
-    const activation = model.infer(img, true);
-    return activation.flatten();
+// Compute embedding from canvas for MobileNet
+async function getEmbedding(canvas) {
+    const tensorImg = tf.browser.fromPixels(canvas).toFloat().div(255).expandDims(0);
+    const embedding = model.infer(tensorImg, true).flatten();
+    return embedding;
 }
 
-// Find closest poster from embeddings
+// Find closest poster using embeddings
 function findClosest(embedding) {
     let minDist = Infinity;
     let bestPoster = null;
@@ -54,7 +49,7 @@ function findClosest(embedding) {
     return bestPoster;
 }
 
-// Load JSON embeddings
+// Load embeddings JSON
 async function loadDataset() {
     try {
         const response = await fetch("poster_embeddings.json");
@@ -70,14 +65,17 @@ async function loadDataset() {
 
 // Scan poster
 async function scanPoster() {
-    try {
-        const img = await captureImage();
-        const embedding = await getEmbedding(tf.browser.fromPixels(img));
-        const posterNumber = findClosest(embedding);
+    const canvas = await captureImage();
+    if (!canvas) return;
+
+    const embedding = await getEmbedding(canvas);
+    const posterNumber = findClosest(embedding);
+
+    if (posterNumber) {
         document.getElementById("result").innerText = 
             `Poster Number: ${posterNumber}\nBox: ${posterMapping[posterNumber]}`;
-    } catch (err) {
-        console.error("Error scanning poster:", err);
+    } else {
+        document.getElementById("result").innerText = "No matching poster found.";
     }
 }
 
@@ -88,10 +86,11 @@ async function init() {
 
     const video = document.getElementById("video");
     
-    // Use rear camera on iPhone/iPad
+    // Access rear camera for iOS and mobile
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
         .then(stream => {
             video.srcObject = stream;
+            video.setAttribute("playsinline", true); // important for iOS
             video.play();
         })
         .catch(err => {
@@ -102,6 +101,5 @@ async function init() {
     document.getElementById("scanBtn").addEventListener("click", scanPoster);
 }
 
-// Start the app
+// Start everything
 init();
-
