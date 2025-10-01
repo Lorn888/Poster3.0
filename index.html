@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Mobile friendly -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poster Scanner</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
@@ -10,9 +10,14 @@
 </head>
 <body>
     <h1>Poster Scanner</h1>
-    <video id="video" autoplay playsinline width="100%" height="auto"></video> <!-- playsinline for iOS -->
-    <button id="scanBtn">Scan Poster</button>
-    <p id="result"></p>
+
+    <video id="video" autoplay playsinline width="100%" height="auto" style="border: 2px solid #333; border-radius: 8px;"></video>
+    <br>
+    <button id="scanBtn" style="padding: 12px 20px; font-size: 18px; margin: 15px 0; border-radius: 8px; background-color: #007BFF; color: white; border: none;">Scan Poster</button>
+    
+    <p id="result" style="font-size: 20px; font-weight: bold;"></p>
+    <div id="log" style="white-space: pre-line; text-align: left; max-width: 400px; margin: auto;"></div>
+
     <script src="script.js"></script>
 </body>
 </html>
